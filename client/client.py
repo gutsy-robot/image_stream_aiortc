@@ -1,5 +1,4 @@
-from multiprocessing import Process, Queue
-
+from multiprocessing import Process, Queue, Value
 import argparse
 import asyncio
 import logging
@@ -51,6 +50,11 @@ async def consume_signaling(pc, signaling):
             print("Exiting")
             break
 
+def process_frame(decoded_imgs, cx, cy):
+    decoded_img = decoded_imgs.get()
+    x, y = get_ball_center(decoded_img)
+    cx.value = x
+    cy.value = y
 
 def get_ball_center(decoded_img):
     """
@@ -75,7 +79,6 @@ def get_ball_center(decoded_img):
 
     return cx, cy
 
-
 async def run_answer(pc, signaling):
     """
     Method to set up connection with the server and declare necessary callbacks
@@ -90,7 +93,9 @@ async def run_answer(pc, signaling):
         None
 
     """
+    q = Queue()
 
+    print("queue declared")
     await signaling.connect()
 
     @pc.on("datachannel")
@@ -104,10 +109,13 @@ async def run_answer(pc, signaling):
             cv2.imshow('client', decoded)
             k = cv2.waitKey(1)
 
-            # calculate the ball position.
-            cx, cy = get_ball_center(decoded)
-
-            res = str(cx) + ', ' + str(cy)
+            cx = Value("f", 0)
+            cy = Value("f", 0)
+            p = Process(target=process_frame, args=(q, cx, cy))
+            q.put(decoded)
+            p.start()
+            p.join()
+            res = str(cx.value) + ', ' + str(cy.value)
             channel.send(res)
 
     await consume_signaling(pc, signaling)
