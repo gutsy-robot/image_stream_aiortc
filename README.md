@@ -1,5 +1,6 @@
 Calculating ball position in an Image stream in aiortc
 ===
+This is a simple server client application which uses tcp socket signalling. The server streams a ball in an environment and the client calculates the position of the ball.
 
 Requirements
 ---
