@@ -1,4 +1,4 @@
-Calculating ball position of an Image stream in aiortc
+Calculating ball position in an Image stream in aiortc
 ===
 
 This is my solution to the Nimble Challenge problem. It consists of a server and a client.
